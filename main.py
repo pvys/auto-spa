@@ -38,7 +38,12 @@ def redeem(contract, nonce, stake=True):
     if not balance:
         return None, None
 
-    transaction = {"from": my_addr, "nonce": nonce}
+    transaction = {
+        "from": my_addr,
+        "nonce": nonce,
+        "gas": contract.functions.redeem(my_addr, stake).estimateGas(),
+        "gasPrice": w3.eth.gas_price,
+    }
 
     tx = contract.functions.redeem(my_addr, stake).buildTransaction(transaction)
     signed_tx = w3.eth.account.sign_transaction(tx, key)

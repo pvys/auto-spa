@@ -34,6 +34,10 @@ def count_rest_blocks():
 
 
 def redeem(contract, nonce, stake=True):
+    balance = contract.functions.redeem(my_addr, False).call()
+    if not balance:
+        return None, None
+
     transaction = {"from": my_addr, "nonce": nonce}
 
     tx = contract.functions.redeem(my_addr, stake).buildTransaction(transaction)
@@ -49,16 +53,26 @@ def run():
         if rest_blocks < 160:
             nonce = w3.eth.get_transaction_count(my_addr)
             tx, tx_hash = redeem(dai_contract, nonce)
-            print(str(datetime.datetime.now()) + "==================================")
-            print(tx)
-            print(tx_hash)
-            tx, tx_hash = redeem(lp_contract, nonce + 1)
-            print(tx)
-            print(tx_hash)
-            print("============================================================")
-            print("\n")
+            if tx_hash is not None:
+                w3.eth.wait_for_transaction_receipt(tx_hash)
+                print(
+                    str(datetime.datetime.now()) + "DAI==============================="
+                )
+                print(tx)
+                print(tx_hash)
+                print("============================================================")
+                print("\n")
 
-            w3.eth.wait_for_transaction_receipt(tx_hash)
+            tx, tx_hash = redeem(lp_contract, nonce + 1)
+            if tx_hash is not None:
+                w3.eth.wait_for_transaction_receipt(tx_hash)
+                print(
+                    str(datetime.datetime.now()) + "LP================================"
+                )
+                print(tx)
+                print(tx_hash)
+                print("============================================================")
+                print("\n")
 
 
 if __name__ == "__main__":

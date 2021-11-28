@@ -24,13 +24,13 @@ my_addr = os.environ["MM_ADDR"].strip()
 key = os.environ["MM_KEY"].strip()
 
 
-def count_rest_blocks():
+def get_current_and_last_block():
     current_block = w3.eth.blockNumber
 
     epoch = staking_contract.functions.epoch().call()
     end_block = epoch[2]
 
-    return end_block - current_block
+    return current_block, end_block
 
 
 def redeem(contract, nonce, stake=True):
@@ -52,10 +52,14 @@ def redeem(contract, nonce, stake=True):
 
 def run():
 
+    last_block = 0
     while True:
         time.sleep(2)
-        rest_blocks = count_rest_blocks()
-        if rest_blocks < 160:
+        cur_block, end_block = get_current_and_last_block()
+        if end_block - cur_block < 160 and cur_block > last_block + 3000:
+            last_block = cur_block
+
+            # TODO - retry
             nonce = w3.eth.get_transaction_count(my_addr)
             tx, tx_hash = redeem(dai_contract, nonce)
             if tx_hash is not None:

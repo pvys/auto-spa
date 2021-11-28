@@ -1,4 +1,5 @@
 from web3 import Web3
+import web3
 
 from consts import *
 
@@ -34,20 +35,36 @@ def get_current_and_last_block():
 
 
 def redeem(contract, nonce, stake=True):
-    balance = contract.functions.redeem(my_addr, False).call()
-    if not balance:
-        return None, None
+    error = ValueError("error")
 
-    transaction = {
-        "from": my_addr,
-        "nonce": nonce,
-        "gas": contract.functions.redeem(my_addr, stake).estimateGas(),
-        "gasPrice": w3.eth.gas_price,
-    }
+    for _ in range(3):
+        try:
+            balance = contract.functions.redeem(my_addr, False).call()
+            if not balance:
+                return None, None
 
-    tx = contract.functions.redeem(my_addr, stake).buildTransaction(transaction)
-    signed_tx = w3.eth.account.sign_transaction(tx, key)
-    return tx, w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            transaction = {
+                "from": my_addr,
+                "nonce": nonce,
+                "gas": contract.functions.redeem(my_addr, stake).estimateGas(),
+                "gasPrice": w3.eth.gas_price,
+            }
+
+            tx = contract.functions.redeem(my_addr, stake).buildTransaction(transaction)
+            signed_tx = w3.eth.account.sign_transaction(tx, key)
+            return tx, w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+
+        except web3.exceptions.ContractLogicError as e:
+            if "SafeMath" in str(e):
+                return None, None
+
+            print(contract.address, str(e))
+            error = e
+        except Exception as e:
+            print("retry", str(e))
+            error = e
+
+    raise error
 
 
 def run():

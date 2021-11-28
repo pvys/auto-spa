@@ -76,7 +76,6 @@ def run():
         if end_block - cur_block < 160 and cur_block > last_block + 3000:
             last_block = cur_block
 
-            # TODO - retry
             nonce = w3.eth.get_transaction_count(my_addr)
             tx, tx_hash = redeem(dai_contract, nonce)
             if tx_hash is not None:
@@ -89,7 +88,8 @@ def run():
                 print("============================================================")
                 print("\n")
 
-            tx, tx_hash = redeem(lp_contract, nonce + 1)
+            nonce = w3.eth.get_transaction_count(my_addr)
+            tx, tx_hash = redeem(lp_contract, nonce)
             if tx_hash is not None:
                 w3.eth.wait_for_transaction_receipt(tx_hash)
                 print(

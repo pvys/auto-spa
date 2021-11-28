@@ -69,12 +69,12 @@ def redeem(contract, nonce, stake=True):
 
 def run():
 
-    last_block = 0
+    last_end_block = 0
     while True:
         time.sleep(2)
         cur_block, end_block = get_current_and_last_block()
-        if end_block - cur_block < 160 and cur_block > last_block + 3000:
-            last_block = cur_block
+        if end_block - cur_block < 160 and last_end_block != end_block:
+            last_end_block = end_block
 
             nonce = w3.eth.get_transaction_count(my_addr)
             tx, tx_hash = redeem(dai_contract, nonce)
